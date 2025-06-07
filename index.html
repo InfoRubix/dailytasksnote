@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Tasks Note</title>
-    <!-- Tailwind CSS for styling -->
+    <title>Daily Tasks & Dashboard</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -29,172 +29,336 @@
             opacity: 0.2;
             z-index: -1;
         }
+        /* Style for active tab */
+        .tab-active {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background-color: #eff6ff;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
 
-    <main class="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200">
-        <div id="form-container">
-            <div class="flex items-center gap-4 mb-8">
-                <i class="fa-solid fa-note-sticky text-3xl text-blue-600"></i>
-                <h1 class="text-3xl font-bold text-gray-800">Daily Tasks Note</h1>
-            </div>
-
-            <form id="task-form">
-                <!-- Top Section: Date and Name -->
-                <div class="grid md:grid-cols-2 gap-6 mb-6 border border-gray-200 rounded-lg p-4">
-                    <div class="flex items-center gap-3">
-                        <label for="date" class="w-20 text-gray-600 font-semibold flex items-center gap-2"><i class="fa-solid fa-calendar-days"></i> Date</label>
-                        <input type="date" id="date" name="Date" required class="w-full bg-gray-100 border-gray-300 text-gray-700 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <label for="name" class="w-20 text-gray-600 font-semibold flex items-center gap-2"><i class="fa-solid fa-user"></i> Name</label>
-                        <input type="text" id="name" name="Name" placeholder="Enter your name" required class="w-full bg-gray-100 border-gray-300 text-gray-700 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                    </div>
+    <main class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-gray-200">
+        <!-- Header and Tab Navigation -->
+        <header class="p-4 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                 <div class="flex items-baseline gap-3 mb-4 sm:mb-0">
+                    <h1 class="text-3xl font-bold text-gray-800">Daily Tasks Note</h1>
+                    <span class="text-sm font-semibold text-gray-400">Powered by RBX</span>
                 </div>
-
-                <!-- Task Sections -->
-                <div class="space-y-6">
-                    <!-- Yesterday's Done -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <label for="yesterday" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-check-double text-green-500"></i> Yesterday's Done</label>
-                        <textarea id="yesterday" name="Yesterday's Done" rows="4" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="- Task 1&#10;- Task 2"></textarea>
-                    </div>
-
-                    <!-- Today's Focus -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <label for="today" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-crosshairs text-blue-500"></i> Today's Focus</label>
-                        <textarea id="today" name="Today's Focus" rows="4" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="- Main goal for today"></textarea>
-                    </div>
-
-                    <!-- Blockers / Pending Issues -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <label for="blockers" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Blockers / Pending Issues</label>
-                        <textarea id="blockers" name="Blockers / Pending Issues" rows="3" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="- Waiting for..."></textarea>
-                    </div>
-
-                    <!-- Context Note -->
-                    <div class="border border-gray-200 rounded-lg p-4">
-                        <label for="context" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-star text-purple-500"></i> Context Note</label>
-                        <textarea id="context" name="Context Note" rows="3" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Any additional notes..."></textarea>
-                    </div>
-                </div>
-
-                <!-- Submission Button -->
-                <div class="mt-8 text-center">
-                    <button type="submit" id="submit-button" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 w-full md:w-auto">
-                        <span id="button-text">Record Note</span>
-                        <i id="button-spinner" class="fa-solid fa-spinner fa-spin hidden"></i>
+                <div class="flex items-center gap-2 border border-gray-300 rounded-lg p-1">
+                    <button id="tab-tasks" onclick="switchTab('tasks')" class="tab-active w-full sm:w-auto text-sm font-semibold py-2 px-4 rounded-md transition-colors">
+                        <i class="fa-solid fa-note-sticky mr-2"></i>Tasks Note
+                    </button>
+                    <button id="tab-dashboard" onclick="switchTab('dashboard')" class="w-full sm:w-auto text-sm font-semibold text-gray-600 py-2 px-4 rounded-md transition-colors hover:bg-gray-100">
+                        <i class="fa-solid fa-chart-line mr-2"></i>Dashboard
                     </button>
                 </div>
-            </form>
-        </div>
-
-        <!-- Success Message -->
-        <div id="success-message" class="hidden text-center p-8">
-            <div class="mx-auto w-16 h-16 flex items-center justify-center bg-green-100 rounded-full mb-4">
-                 <i class="fa-solid fa-check text-4xl text-green-600"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Note Submitted!</h2>
-            <p class="text-gray-600 mb-6">Your daily task note has been successfully recorded.</p>
-            <button onclick="resetForm()" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition">Add Another Note</button>
-        </div>
-        
-        <!-- Error Message -->
-        <div id="error-message" class="hidden text-center p-8">
-             <div class="mx-auto w-16 h-16 flex items-center justify-center bg-red-100 rounded-full mb-4">
-                 <i class="fa-solid fa-xmark text-4xl text-red-600"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Submission Failed!</h2>
-            <p class="text-gray-600 mb-6">Something went wrong. Please check your connection or the script URL and try again.</p>
-            <button onclick="resetForm()" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition">Try Again</button>
-        </div>
+        </header>
 
+        <div class="p-6 md:p-10">
+            <!-- ===== TASKS SECTION ===== -->
+            <div id="tasks-section">
+                <div id="form-container">
+                    <form id="task-form">
+                        <!-- Top Section: Date and Name -->
+                        <div class="grid md:grid-cols-2 gap-6 mb-6 border border-gray-200 rounded-lg p-4">
+                            <div class="flex items-center gap-3">
+                                <label for="date" class="w-20 text-gray-600 font-semibold flex items-center gap-2"><i class="fa-solid fa-calendar-days"></i> Date</label>
+                                <input type="date" id="date" name="Date" required class="w-full bg-gray-100 border-gray-300 text-gray-700 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <label for="name" class="w-20 text-gray-600 font-semibold flex items-center gap-2"><i class="fa-solid fa-user"></i> Name</label>
+                                <input type="text" id="name" name="Name" placeholder="Enter your name" required class="w-full bg-gray-100 border-gray-300 text-gray-700 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            </div>
+                        </div>
+                        <!-- Task Sections -->
+                        <div class="space-y-6">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <label for="yesterday" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-check-double text-green-500"></i> Yesterday's Done</label>
+                                <textarea id="yesterday" name="Yesterday's Done" rows="4" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="- Task 1&#10;- Task 2"></textarea>
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <label for="today" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-crosshairs text-blue-500"></i> Today's Focus</label>
+                                <textarea id="today" name="Today's Focus" rows="4" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="- Main goal for today"></textarea>
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <label for="blockers" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Blockers / Pending Issues</label>
+                                <textarea id="blockers" name="Blockers / Pending Issues" rows="3" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="- Waiting for..."></textarea>
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <label for="context" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-star text-purple-500"></i> Context Note</label>
+                                <textarea id="context" name="Context Note" rows="3" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Any additional notes..."></textarea>
+                            </div>
+                        </div>
+                        <!-- Submission Button -->
+                        <div class="mt-8 text-center">
+                            <button type="submit" id="submit-button" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 w-full md:w-auto">
+                                <span id="button-text">Record Note</span>
+                                <i id="button-spinner" class="fa-solid fa-spinner fa-spin hidden"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                 <!-- Form Success/Error Messages -->
+                <div id="form-success-message" class="hidden text-center p-8"><div class="mx-auto w-16 h-16 flex items-center justify-center bg-green-100 rounded-full mb-4"><i class="fa-solid fa-check text-4xl text-green-600"></i></div><h2 class="text-2xl font-bold text-gray-800 mb-2">Note Submitted!</h2><p class="text-gray-600 mb-6">Your daily task note has been successfully recorded.</p><button onclick="resetTaskForm()" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition">Add Another Note</button></div>
+                <div id="form-error-message" class="hidden text-center p-8"><div class="mx-auto w-16 h-16 flex items-center justify-center bg-red-100 rounded-full mb-4"><i class="fa-solid fa-xmark text-4xl text-red-600"></i></div><h2 class="text-2xl font-bold text-gray-800 mb-2">Submission Failed!</h2><p class="text-gray-600 mb-6">Something went wrong. Please check your connection or the script URL and try again.</p><button onclick="resetTaskForm()" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition">Try Again</button></div>
+            </div>
+
+            <!-- ===== DASHBOARD SECTION ===== -->
+            <div id="dashboard-section" class="hidden">
+                 <!-- Login Section -->
+                <div id="login-section">
+                    <div class="w-full max-w-md mx-auto bg-white p-8">
+                        <div class="text-center mb-8"><h1 class="text-2xl font-bold text-gray-800 mt-4">Dashboard Login</h1><p class="text-gray-500">Please log in to view the analysis.</p></div>
+                        <form id="login-form">
+                            <div class="mb-4"><label for="email" class="block text-gray-700 font-semibold mb-2">Email</label><input type="email" id="email" required class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                            <div class="mb-6"><label for="password" class="block text-gray-700 font-semibold mb-2">Password</label><input type="password" id="password" required class="w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></div>
+                            <div id="login-error-message" class="text-red-500 text-center mb-4 hidden"></div>
+                            <button type="submit" id="login-button" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition-all"><span id="login-button-text">Log In</span><i id="login-spinner" class="fa-solid fa-spinner fa-spin hidden"></i></button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Analysis Section -->
+                <div id="analysis-section" class="hidden">
+                     <main id="analysis-content" class="space-y-8">
+                        <div id="dashboard-loading-state" class="text-center py-16"><i class="fa-solid fa-spinner fa-spin text-4xl text-blue-600"></i><p class="mt-4 text-gray-600">Analyzing data...</p></div>
+                        <div id="dashboard-no-data-state" class="hidden text-center py-16 bg-white rounded-lg shadow"><i class="fa-solid fa-database text-4xl text-gray-400"></i><p class="mt-4 text-gray-600 font-semibold">No data found in the Google Sheet yet.</p><p class="text-gray-500">Submit some notes to see the analysis.</p></div>
+                        <div id="dashboard-data-display" class="hidden space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div class="bg-white p-6 rounded-xl shadow-md flex items-center gap-4"><i class="fa-solid fa-users text-3xl text-blue-500"></i><div><p class="text-gray-500">Total Contributors</p><p id="total-contributors" class="text-3xl font-bold"></p></div></div>
+                                <div class="bg-white p-6 rounded-xl shadow-md flex items-center gap-4"><i class="fa-solid fa-file-alt text-3xl text-green-500"></i><div><p class="text-gray-500">Total Notes</p><p id="total-notes" class="text-3xl font-bold"></p></div></div>
+                                <div class="bg-white p-6 rounded-xl shadow-md flex items-center gap-4"><i class="fa-solid fa-triangle-exclamation text-3xl text-yellow-500"></i><div><p class="text-gray-500">Total Blockers</p><p id="total-blockers" class="text-3xl font-bold"></p></div></div>
+                                <div class="bg-white p-6 rounded-xl shadow-md flex items-center gap-4"><i class="fa-solid fa-user-check text-3xl text-purple-500"></i><div><p class="text-gray-500">Most Active User</p><p id="most-active-user" class="text-2xl font-bold truncate"></p></div></div>
+                            </div>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div class="bg-white p-6 rounded-xl shadow-md"><h2 class="text-xl font-bold mb-4">Submissions per Person</h2><canvas id="submissions-chart"></canvas></div>
+                                <div class="bg-white p-6 rounded-xl shadow-md"><h2 class="text-xl font-bold mb-4">Submissions Over Time</h2><canvas id="timeline-chart"></canvas></div>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </div>
     </main>
 
     <script>
         // --- IMPORTANT ---
         // PASTE YOUR GOOGLE APPS SCRIPT URL HERE
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPsVMEHgboe2DuO0u9N4PH06zL0wMGn7JKcA73aNtAQ2Ei9pOb8jc9Q634ajZ331YF8w/exec'; 
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPsVMEHgboe2DuO0u9N4PH06zL0wMGn7JKcA73aNtAQ2Ei9pOb8jc9Q634ajZ331YF8w/exec';
         // -----------------
 
-        const form = document.getElementById('task-form');
+        // --- DOM Element Variables ---
+        // Tabs
+        const tasksSection = document.getElementById('tasks-section');
+        const dashboardSection = document.getElementById('dashboard-section');
+        const tabTasks = document.getElementById('tab-tasks');
+        const tabDashboard = document.getElementById('tab-dashboard');
+
+        // Task Form Elements
+        const taskForm = document.getElementById('task-form');
         const submitButton = document.getElementById('submit-button');
         const buttonText = document.getElementById('button-text');
         const buttonSpinner = document.getElementById('button-spinner');
-        
         const formContainer = document.getElementById('form-container');
-        const successMessage = document.getElementById('success-message');
-        const errorMessage = document.getElementById('error-message');
+        const formSuccessMessage = document.getElementById('form-success-message');
+        const formErrorMessage = document.getElementById('form-error-message');
 
+        // Dashboard Elements
+        const loginSection = document.getElementById('login-section');
+        const analysisSection = document.getElementById('analysis-section');
+        const loginForm = document.getElementById('login-form');
+        const loginErrorMessage = document.getElementById('login-error-message');
+        const loginButton = document.getElementById('login-button');
+        const loginButtonText = document.getElementById('login-button-text');
+        const loginSpinner = document.getElementById('login-spinner');
+        
+        const dashboardLoadingState = document.getElementById('dashboard-loading-state');
+        const dashboardNoDataState = document.getElementById('dashboard-no-data-state');
+        const dashboardDataDisplay = document.getElementById('dashboard-data-display');
+        let submissionsChartInstance = null;
+        let timelineChartInstance = null;
+        
+        // --- Initial Setup ---
         // Set the date to today by default
         document.addEventListener('DOMContentLoaded', () => {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0');
-            const day = String(today.getDate()).padStart(2, '0');
-            document.getElementById('date').value = `${year}-${month}-${day}`;
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
         });
 
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
+        // --- Tab Switching Logic ---
+        function switchTab(tab) {
+            if (tab === 'tasks') {
+                tasksSection.classList.remove('hidden');
+                dashboardSection.classList.add('hidden');
+                tabTasks.classList.add('tab-active');
+                tabTasks.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                tabDashboard.classList.remove('tab-active');
+                tabDashboard.classList.add('text-gray-600', 'hover:bg-gray-100');
+            } else if (tab === 'dashboard') {
+                tasksSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+                tabDashboard.classList.add('tab-active');
+                tabDashboard.classList.remove('text-gray-600', 'hover:bg-gray-100');
+                tabTasks.classList.remove('tab-active');
+                tabTasks.classList.add('text-gray-600', 'hover:bg-gray-100');
 
+                // Check login status when switching to dashboard
+                if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                    showAnalysisView();
+                } else {
+                    showLoginView();
+                }
+            }
+        }
+
+        // --- Daily Tasks Note Logic ---
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
             if (SCRIPT_URL === '') {
-                alert('ERROR: Please paste your Google Apps Script URL into the SCRIPT_URL constant in the HTML file.');
+                alert('ERROR: Please paste your Google Apps Script URL into the SCRIPT_URL constant.');
                 return;
             }
 
-            // Show loading state
             buttonText.classList.add('hidden');
             buttonSpinner.classList.remove('hidden');
             submitButton.disabled = true;
 
-            fetch(SCRIPT_URL, {
-                method: 'POST',
-                body: new FormData(form)
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.result === "success") {
-                    showSuccessMessage();
-                } else {
-                    throw new Error(data.error || 'Unknown error from Google Apps Script');
-                }
-            })
-            .catch(error => {
-                console.error('Error!', error.message);
-                showErrorMessage();
-            })
-            .finally(() => {
-                // Reset button state
-                buttonText.classList.remove('hidden');
-                buttonSpinner.classList.add('hidden');
-                submitButton.disabled = false;
-            });
+            fetch(SCRIPT_URL, { method: 'POST', body: new FormData(taskForm) })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.result === "success") {
+                        formContainer.classList.add('hidden');
+                        formSuccessMessage.classList.remove('hidden');
+                    } else {
+                        throw new Error(data.error || 'Unknown error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Task form error:', error.message);
+                    formContainer.classList.add('hidden');
+                    formErrorMessage.classList.remove('hidden');
+                })
+                .finally(() => {
+                    buttonText.classList.remove('hidden');
+                    buttonSpinner.classList.add('hidden');
+                    submitButton.disabled = false;
+                });
+        });
+        
+        function resetTaskForm() {
+            formContainer.classList.remove('hidden');
+            formSuccessMessage.classList.add('hidden');
+            formErrorMessage.classList.add('hidden');
+            taskForm.reset();
+            document.getElementById('date').value = new Date().toISOString().split('T')[0];
+        }
+
+        // --- Performance Dashboard Logic ---
+        function showLoginView() {
+            loginSection.classList.remove('hidden');
+            analysisSection.classList.add('hidden');
+        }
+
+        function showAnalysisView() {
+            loginSection.classList.add('hidden');
+            analysisSection.classList.remove('hidden');
+            renderDashboard();
+        }
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            loginButtonText.classList.add('hidden');
+            loginSpinner.classList.remove('hidden');
+            loginButton.disabled = true;
+            loginErrorMessage.classList.add('hidden');
+
+            const url = `${SCRIPT_URL}?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(res => {
+                    if (res.result === 'success') {
+                        sessionStorage.setItem('isLoggedIn', 'true');
+                        sessionStorage.setItem('dashboardData', JSON.stringify(res.data));
+                        showAnalysisView();
+                    } else {
+                        throw new Error(res.error || 'Invalid credentials.');
+                    }
+                })
+                .catch(error => {
+                    loginErrorMessage.textContent = `Login Failed: ${error.message}`;
+                    loginErrorMessage.classList.remove('hidden');
+                })
+                .finally(() => {
+                    loginButtonText.classList.remove('hidden');
+                    loginSpinner.classList.add('hidden');
+                    loginButton.disabled = false;
+                });
         });
 
-        function showSuccessMessage() {
-            formContainer.classList.add('hidden');
-            successMessage.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
-        }
+        function renderDashboard() {
+            const data = JSON.parse(sessionStorage.getItem('dashboardData'));
+            
+            dashboardLoadingState.classList.add('hidden');
+            
+            if (!data || data.length === 0) {
+                 dashboardNoDataState.classList.remove('hidden');
+                 dashboardDataDisplay.classList.add('hidden');
+                 return;
+            }
 
-        function showErrorMessage() {
-            formContainer.classList.add('hidden');
-            errorMessage.classList.remove('hidden');
-            successMessage.classList.add('hidden');
-        }
+            dashboardNoDataState.classList.add('hidden');
+            dashboardDataDisplay.classList.remove('hidden');
+            
+            const notesByName = {};
+            const notesByDate = {};
+            let totalBlockers = 0;
 
-        function resetForm() {
-            formContainer.classList.remove('hidden');
-            successMessage.classList.add('hidden');
-            errorMessage.classList.add('hidden');
-            form.reset();
-            // Reset date to today after clearing
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('date').value = today;
-        }
+            data.forEach(note => {
+                const name = note.Name || 'Unnamed';
+                notesByName[name] = (notesByName[name] || 0) + 1;
+                if(note['Blockers / Pending Issues'] && note['Blockers / Pending Issues'].trim() !== ''){
+                    totalBlockers++;
+                }
+                const date = new Date(note.Date).toISOString().split('T')[0];
+                notesByDate[date] = (notesByDate[date] || 0) + 1;
+            });
+            
+            const contributors = Object.keys(notesByName);
+            const mostActive = Object.entries(notesByName).sort((a, b) => b[1] - a[1])[0];
 
+            document.getElementById('total-contributors').textContent = contributors.length;
+            document.getElementById('total-notes').textContent = data.length;
+            document.getElementById('total-blockers').textContent = totalBlockers;
+            document.getElementById('most-active-user').textContent = mostActive ? mostActive[0] : 'N/A';
+
+            if (submissionsChartInstance) submissionsChartInstance.destroy();
+            if (timelineChartInstance) timelineChartInstance.destroy();
+
+            const chartColors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#6b7280'];
+            
+            submissionsChartInstance = new Chart(document.getElementById('submissions-chart'), {
+                type: 'bar',
+                data: { labels: Object.keys(notesByName), datasets: [{ label: 'Number of Notes', data: Object.values(notesByName), backgroundColor: chartColors, borderColor: '#ffffff', borderWidth: 2 }] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+
+             const sortedDates = Object.keys(notesByDate).sort();
+             timelineChartInstance = new Chart(document.getElementById('timeline-chart'), {
+                type: 'line',
+                data: {
+                    labels: sortedDates.map(date => new Date(date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})),
+                    datasets: [{ label: 'Daily Submissions', data: sortedDates.map(date => notesByDate[date]), fill: true, backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: '#3b82f6', tension: 0.1 }]
+                },
+                 options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+            });
+        }
     </script>
 </body>
 </html>
