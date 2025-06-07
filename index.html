@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Tasks Note</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styling for a subtle background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
+            background-size: 16px 16px;
+            opacity: 0.2;
+            z-index: -1;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
+
+    <main class="w-full max-w-3xl bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-200">
+        <div id="form-container">
+            <div class="flex items-center gap-4 mb-8">
+                <i class="fa-solid fa-note-sticky text-3xl text-blue-600"></i>
+                <h1 class="text-3xl font-bold text-gray-800">Daily Tasks Note</h1>
+            </div>
+
+            <form id="task-form">
+                <!-- Top Section: Date and Name -->
+                <div class="grid md:grid-cols-2 gap-6 mb-6 border border-gray-200 rounded-lg p-4">
+                    <div class="flex items-center gap-3">
+                        <label for="date" class="w-20 text-gray-600 font-semibold flex items-center gap-2"><i class="fa-solid fa-calendar-days"></i> Date</label>
+                        <input type="date" id="date" name="Date" required class="w-full bg-gray-100 border-gray-300 text-gray-700 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label for="name" class="w-20 text-gray-600 font-semibold flex items-center gap-2"><i class="fa-solid fa-user"></i> Name</label>
+                        <input type="text" id="name" name="Name" placeholder="Enter your name" required class="w-full bg-gray-100 border-gray-300 text-gray-700 rounded-md p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                </div>
+
+                <!-- Task Sections -->
+                <div class="space-y-6">
+                    <!-- Yesterday's Done -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <label for="yesterday" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-check-double text-green-500"></i> Yesterday's Done</label>
+                        <textarea id="yesterday" name="Yesterday's Done" rows="4" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="- Task 1&#10;- Task 2"></textarea>
+                    </div>
+
+                    <!-- Today's Focus -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <label for="today" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-crosshairs text-blue-500"></i> Today's Focus</label>
+                        <textarea id="today" name="Today's Focus" rows="4" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="- Main goal for today"></textarea>
+                    </div>
+
+                    <!-- Blockers / Pending Issues -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <label for="blockers" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-yellow-500"></i> Blockers / Pending Issues</label>
+                        <textarea id="blockers" name="Blockers / Pending Issues" rows="3" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="- Waiting for..."></textarea>
+                    </div>
+
+                    <!-- Context Note -->
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <label for="context" class="block text-lg font-semibold text-gray-700 mb-2 flex items-center gap-2"><i class="fa-solid fa-star text-purple-500"></i> Context Note</label>
+                        <textarea id="context" name="Context Note" rows="3" class="w-full bg-gray-50 border-gray-300 rounded-md p-3 text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Any additional notes..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Submission Button -->
+                <div class="mt-8 text-center">
+                    <button type="submit" id="submit-button" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 transition-all duration-300 w-full md:w-auto">
+                        <span id="button-text">Record Note</span>
+                        <i id="button-spinner" class="fa-solid fa-spinner fa-spin hidden"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Success Message -->
+        <div id="success-message" class="hidden text-center p-8">
+            <div class="mx-auto w-16 h-16 flex items-center justify-center bg-green-100 rounded-full mb-4">
+                 <i class="fa-solid fa-check text-4xl text-green-600"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Note Submitted!</h2>
+            <p class="text-gray-600 mb-6">Your daily task note has been successfully recorded.</p>
+            <button onclick="resetForm()" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition">Add Another Note</button>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="error-message" class="hidden text-center p-8">
+             <div class="mx-auto w-16 h-16 flex items-center justify-center bg-red-100 rounded-full mb-4">
+                 <i class="fa-solid fa-xmark text-4xl text-red-600"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Submission Failed!</h2>
+            <p class="text-gray-600 mb-6">Something went wrong. Please check your connection or the script URL and try again.</p>
+            <button onclick="resetForm()" class="bg-gray-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-700 transition">Try Again</button>
+        </div>
+
+    </main>
+
+    <script>
+        // --- IMPORTANT ---
+        // PASTE YOUR GOOGLE APPS SCRIPT URL HERE
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPsVMEHgboe2DuO0u9N4PH06zL0wMGn7JKcA73aNtAQ2Ei9pOb8jc9Q634ajZ331YF8w/exec'; 
+        // -----------------
+
+        const form = document.getElementById('task-form');
+        const submitButton = document.getElementById('submit-button');
+        const buttonText = document.getElementById('button-text');
+        const buttonSpinner = document.getElementById('button-spinner');
+        
+        const formContainer = document.getElementById('form-container');
+        const successMessage = document.getElementById('success-message');
+        const errorMessage = document.getElementById('error-message');
+
+        // Set the date to today by default
+        document.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            document.getElementById('date').value = `${year}-${month}-${day}`;
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            if (SCRIPT_URL === '') {
+                alert('ERROR: Please paste your Google Apps Script URL into the SCRIPT_URL constant in the HTML file.');
+                return;
+            }
+
+            // Show loading state
+            buttonText.classList.add('hidden');
+            buttonSpinner.classList.remove('hidden');
+            submitButton.disabled = true;
+
+            fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: new FormData(form)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.result === "success") {
+                    showSuccessMessage();
+                } else {
+                    throw new Error(data.error || 'Unknown error from Google Apps Script');
+                }
+            })
+            .catch(error => {
+                console.error('Error!', error.message);
+                showErrorMessage();
+            })
+            .finally(() => {
+                // Reset button state
+                buttonText.classList.remove('hidden');
+                buttonSpinner.classList.add('hidden');
+                submitButton.disabled = false;
+            });
+        });
+
+        function showSuccessMessage() {
+            formContainer.classList.add('hidden');
+            successMessage.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+        }
+
+        function showErrorMessage() {
+            formContainer.classList.add('hidden');
+            errorMessage.classList.remove('hidden');
+            successMessage.classList.add('hidden');
+        }
+
+        function resetForm() {
+            formContainer.classList.remove('hidden');
+            successMessage.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            form.reset();
+            // Reset date to today after clearing
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+        }
+
+    </script>
+</body>
+</html>
