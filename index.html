@@ -22,11 +22,16 @@
         .tab-active { border-color: #3b82f6; color: #3b82f6; background-color: #eff6ff; }
         .tab-inactive { color: #4b5563; }
         .tab-inactive:hover { background-color: #f3f4f6; }
+        /* Ensure long text wraps in the table */
+        #submission-table td {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 flex items-center justify-center min-h-screen p-4">
 
-    <main class="w-full max-w-4xl bg-white rounded-2xl shadow-xl border border-gray-200">
+    <main class="w-full max-w-6xl bg-white rounded-2xl shadow-xl border border-gray-200">
         <!-- Header and Tab Navigation -->
         <header class="p-4 border-b border-gray-200">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
@@ -85,6 +90,7 @@
                     <div class="border-b-2 mb-6">
                         <nav class="flex gap-4 -mb-0.5" id="dashboard-nav">
                              <button onclick="switchDashboardView('analytics')" data-view="analytics" class="py-3 px-1 border-b-2 border-blue-500 text-blue-500 font-semibold">Analytics</button>
+                             <button onclick="switchDashboardView('details')" data-view="details" class="py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700">Submissions Log</button>
                              <button onclick="switchDashboardView('users')" data-view="users" class="py-3 px-1 border-b-2 border-transparent text-gray-500 hover:text-gray-700">User Management</button>
                         </nav>
                     </div>
@@ -106,6 +112,35 @@
                             </div>
                         </div>
                     </main>
+
+                    <!-- Detailed Submissions View -->
+                    <main id="details-view" class="hidden">
+                        <div class="bg-white p-6 rounded-xl shadow-md">
+                            <div class="flex flex-col md:flex-row gap-4 mb-4">
+                                <select id="user-filter" class="w-full md:w-1/3 bg-gray-50 border rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+                                    <option value="all">Filter by User (All)</option>
+                                </select>
+                                <input type="text" id="search-filter" class="w-full md:w-2/3 bg-gray-50 border rounded-lg p-2 focus:ring-2 focus:ring-blue-500" placeholder="Search in notes...">
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table id="submission-table" class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted On</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Yesterday's Done</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Today's Focus</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Blockers</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="submission-table-body" class="bg-white divide-y divide-gray-200">
+                                        <!-- Table rows will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </main>
+
                     <!-- User Management View -->
                     <main id="users-view" class="hidden space-y-6">
                         <div class="bg-white p-6 rounded-xl shadow-md">
@@ -134,6 +169,7 @@
         
         // --- GLOBAL STATE ---
         let currentUsers = [];
+        let allTasks = [];
         let submissionsChartInstance = null;
         let timelineChartInstance = null;
         
@@ -141,30 +177,30 @@
         const nameDropdown = document.getElementById('name');
         const taskForm = document.getElementById('task-form');
         const loginForm = document.getElementById('login-form');
-        // Add other element selectors here as needed to avoid repeated lookups
         const tasksSection = document.getElementById('tasks-section');
         const dashboardSection = document.getElementById('dashboard-section');
         const loginSection = document.getElementById('login-section');
         const analysisSection = document.getElementById('analysis-section');
         const analyticsView = document.getElementById('analytics-view');
         const usersView = document.getElementById('users-view');
+        const detailsView = document.getElementById('details-view');
         
         // --- INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('date').value = new Date().toISOString().split('T')[0];
             fetchUsersForDropdown();
+            document.getElementById('user-filter').addEventListener('change', renderDetailedView);
+            document.getElementById('search-filter').addEventListener('input', renderDetailedView);
         });
 
         function fetchUsersForDropdown() {
             const formData = new FormData();
             formData.append('action', 'get_users');
             fetch(SCRIPT_URL, { method: 'POST', body: formData })
-                .then(res => res.json())
+                .then(handleFetchResponse)
                 .then(res => {
-                    if (res.result === 'success') {
-                        currentUsers = res.users;
-                        populateUserDropdown(res.users);
-                    } else { throw new Error(res.error); }
+                    currentUsers = res.users;
+                    populateUserDropdown(res.users);
                 })
                 .catch(error => {
                     console.error("Failed to fetch users:", error);
@@ -174,7 +210,7 @@
 
         function populateUserDropdown(users) {
             nameDropdown.innerHTML = '<option value="" disabled selected>Select your name</option>';
-            users.forEach(user => {
+            users.sort().forEach(user => {
                 const option = document.createElement('option');
                 option.value = user;
                 option.textContent = user;
@@ -187,35 +223,33 @@
             const tabTasks = document.getElementById('tab-tasks');
             const tabDashboard = document.getElementById('tab-dashboard');
             
-            if (tab === 'tasks') {
-                tasksSection.classList.remove('hidden');
-                dashboardSection.classList.add('hidden');
-                tabTasks.classList.replace('tab-inactive', 'tab-active');
-                tabDashboard.classList.replace('tab-active', 'tab-inactive');
-            } else if (tab === 'dashboard') {
-                tasksSection.classList.add('hidden');
-                dashboardSection.classList.remove('hidden');
-                tabDashboard.classList.replace('tab-inactive', 'tab-active');
-                tabTasks.classList.replace('tab-active', 'tab-inactive');
+            tasksSection.classList.toggle('hidden', tab !== 'tasks');
+            dashboardSection.classList.toggle('hidden', tab === 'tasks');
+            
+            tabTasks.classList.toggle('tab-active', tab === 'tasks');
+            tabTasks.classList.toggle('tab-inactive', tab !== 'tasks');
+            tabDashboard.classList.toggle('tab-active', tab !== 'tasks');
+            tabDashboard.classList.toggle('tab-inactive', tab === 'tasks');
 
-                if (sessionStorage.getItem('isLoggedIn') === 'true') {
-                    showAnalysisView();
-                } else {
-                    showLoginView();
-                }
+            if (tab === 'dashboard' && sessionStorage.getItem('isLoggedIn') !== 'true') {
+                showLoginView();
+            } else if (tab === 'dashboard') {
+                showAnalysisView();
             }
         }
         
         function switchDashboardView(view) {
              document.querySelectorAll('#dashboard-nav button').forEach(button => {
-                button.classList.remove('border-blue-500', 'text-blue-500');
-                button.classList.add('border-transparent', 'text-gray-500');
+                const isSelected = button.dataset.view === view;
+                button.classList.toggle('border-blue-500', isSelected);
+                button.classList.toggle('text-blue-500', isSelected);
+                button.classList.toggle('border-transparent', !isSelected);
+                button.classList.toggle('text-gray-500', !isSelected);
             });
-            const selectedButton = document.querySelector(`#dashboard-nav button[data-view="${view}"]`);
-            selectedButton.classList.add('border-blue-500', 'text-blue-500');
             
             analyticsView.classList.toggle('hidden', view !== 'analytics');
             usersView.classList.toggle('hidden', view !== 'users');
+            detailsView.classList.toggle('hidden', view !== 'details');
         }
 
         // --- TASK FORM LOGIC ---
@@ -260,8 +294,9 @@
                 .then(handleFetchResponse)
                 .then(res => {
                     sessionStorage.setItem('isLoggedIn', 'true');
-                    sessionStorage.setItem('dashboardData', JSON.stringify(res.data.tasks));
+                    allTasks = res.data.tasks;
                     currentUsers = res.data.users;
+                    sessionStorage.setItem('dashboardUsers', JSON.stringify(currentUsers));
                     showAnalysisView();
                 })
                 .catch(error => {
@@ -274,8 +309,9 @@
         function logout() {
             sessionStorage.clear();
             currentUsers = [];
+            allTasks = [];
             showLoginView();
-            fetchUsersForDropdown(); // Refetch users for the main form
+            fetchUsersForDropdown();
         }
 
         function showLoginView() {
@@ -286,13 +322,17 @@
         function showAnalysisView() {
             loginSection.classList.add('hidden');
             analysisSection.classList.remove('hidden');
+            if (sessionStorage.getItem('dashboardUsers')) {
+                currentUsers = JSON.parse(sessionStorage.getItem('dashboardUsers'));
+            }
             renderDashboard();
             renderUserManagement();
+            renderDetailedView();
         }
 
         // --- DASHBOARD RENDERING ---
         function renderDashboard() {
-            const data = JSON.parse(sessionStorage.getItem('dashboardData')) || [];
+            const data = allTasks;
             const loading = document.getElementById('dashboard-loading-state');
             const noData = document.getElementById('dashboard-no-data-state');
             const display = document.getElementById('dashboard-data-display');
@@ -306,10 +346,7 @@
             noData.classList.add('hidden');
             display.classList.remove('hidden');
             
-            const notesByName = data.reduce((acc, note) => {
-                acc[note.Name] = (acc[note.Name] || 0) + 1;
-                return acc;
-            }, {});
+            const notesByName = data.reduce((acc, note) => { acc[note.Name] = (acc[note.Name] || 0) + 1; return acc; }, {});
             const totalBlockers = data.filter(n => n['Blockers / Pending Issues'] && n['Blockers / Pending Issues'].trim() !== '').length;
             const mostActive = Object.entries(notesByName).sort((a, b) => b[1] - a[1])[0];
             
@@ -331,22 +368,68 @@
 
             if (submissionsChartInstance) submissionsChartInstance.destroy();
             submissionsChartInstance = new Chart(document.getElementById('submissions-chart'), {
-                type: 'bar',
-                data: { labels: Object.keys(notesByName), datasets: [{ label: 'Notes', data: Object.values(notesByName), backgroundColor: '#3b82f6' }] },
+                type: 'bar', data: { labels: Object.keys(notesByName), datasets: [{ label: 'Notes', data: Object.values(notesByName), backgroundColor: '#3b82f6' }] },
                 options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
             });
 
             if (timelineChartInstance) timelineChartInstance.destroy();
             timelineChartInstance = new Chart(document.getElementById('timeline-chart'), {
-                type: 'line',
-                data: {
-                    labels: sortedDates.map(d => new Date(d).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})),
-                    datasets: [{ label: 'Submissions', data: sortedDates.map(d => notesByDate[d]), tension: 0.1, borderColor: '#10b981' }]
-                },
+                type: 'line', data: { labels: sortedDates.map(d => new Date(d).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})), datasets: [{ label: 'Submissions', data: sortedDates.map(d => notesByDate[d]), tension: 0.1, borderColor: '#10b981' }] },
                 options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
             });
         }
         
+        // --- DETAILED VIEW LOGIC ---
+        function renderDetailedView() {
+            const tableBody = document.getElementById('submission-table-body');
+            const userFilter = document.getElementById('user-filter');
+            const searchFilter = document.getElementById('search-filter').value.toLowerCase();
+            const selectedUser = userFilter.value;
+
+            // Populate user filter dropdown if it's empty
+            if (userFilter.options.length <= 1) {
+                currentUsers.sort().forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user;
+                    option.textContent = user;
+                    userFilter.appendChild(option);
+                });
+            }
+            
+            let filteredTasks = allTasks;
+
+            if (selectedUser !== 'all') {
+                filteredTasks = filteredTasks.filter(task => task.Name === selectedUser);
+            }
+
+            if (searchFilter) {
+                filteredTasks = filteredTasks.filter(task => 
+                    Object.values(task).some(value => 
+                        String(value).toLowerCase().includes(searchFilter)
+                    )
+                );
+            }
+            
+            tableBody.innerHTML = ''; // Clear existing rows
+            if (filteredTasks.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="text-center text-gray-500 py-8">No matching submissions found.</td></tr>`;
+                return;
+            }
+
+            filteredTasks.slice().reverse().forEach(task => { // Show newest first
+                const row = document.createElement('tr');
+                const submittedDate = task.Timestamp ? new Date(task.Timestamp).toLocaleString() : 'N/A';
+                row.innerHTML = `
+                    <td class="px-4 py-3 align-top text-sm text-gray-700">${submittedDate}</td>
+                    <td class="px-4 py-3 align-top text-sm font-medium text-gray-900">${task.Name}</td>
+                    <td class="px-4 py-3 align-top text-sm text-gray-600">${task["Yesterday's Done"]}</td>
+                    <td class="px-4 py-3 align-top text-sm text-gray-600">${task["Today's Focus"]}</td>
+                    <td class="px-4 py-3 align-top text-sm text-gray-600">${task["Blockers / Pending Issues"]}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
         // --- USER MANAGEMENT LOGIC ---
         function renderUserManagement() {
             const userList = document.getElementById('user-list');
@@ -358,10 +441,7 @@
             currentUsers.sort().forEach(user => {
                 const li = document.createElement('li');
                 li.className = 'flex justify-between items-center bg-gray-50 p-3 rounded-lg';
-                li.innerHTML = `
-                    <span class="font-medium">${user}</span>
-                    <button onclick="removeUser('${user}')" class="text-red-500 hover:text-red-700 font-bold text-lg">&times;</button>
-                `;
+                li.innerHTML = `<span class="font-medium">${user}</span><button onclick="removeUser('${user}')" class="text-red-500 hover:text-red-700 font-bold text-lg">&times;</button>`;
                 userList.appendChild(li);
             });
         }
@@ -382,9 +462,9 @@
                 .then(handleFetchResponse)
                 .then(() => {
                     showUserOpStatus(`User '${name}' added successfully.`, 'text-green-600');
-                    currentUsers.push(name);
+                    if (!currentUsers.includes(name)) currentUsers.push(name);
                     renderUserManagement();
-                    populateUserDropdown(currentUsers.sort()); // Update main form dropdown
+                    populateUserDropdown(currentUsers.sort());
                     newUserNameInput.value = '';
                 })
                 .catch(error => showUserOpStatus(`Error: ${error.message}`, 'text-red-500'));
@@ -405,7 +485,7 @@
                     showUserOpStatus(`User '${name}' removed successfully.`, 'text-green-600');
                     currentUsers = currentUsers.filter(u => u !== name);
                     renderUserManagement();
-                    populateUserDropdown(currentUsers.sort()); // Update main form dropdown
+                    populateUserDropdown(currentUsers.sort());
                 })
                 .catch(error => showUserOpStatus(`Error: ${error.message}`, 'text-red-500'));
         }
